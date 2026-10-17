@@ -1,0 +1,11 @@
+<resources>
+    <color name="ink_background">#FAFAF8</color>
+    <color name="ink_panel">#FFFFFF</color>
+    <color name="ink_text">#222329</color>
+    <color name="ink_secondary">#5E606A</color>
+    <color name="ink_line">#DEDEDC</color>
+    <color name="ink_tint">#EEEFEA</color>
+    <color name="ink_on_primary">#FFFFFF</color>
+    <color name="ink_warning">#815517</color>
+    <color name="ink_error">#AA3434</color>
+</resources>

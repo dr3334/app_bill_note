@@ -1,0 +1,22 @@
+<resources>
+    <style name="Theme.InkLedger" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/ink_text</item>
+        <item name="colorOnPrimary">@color/ink_on_primary</item>
+        <item name="colorSecondary">@color/ink_text</item>
+        <item name="colorOnSecondary">@color/ink_on_primary</item>
+        <item name="colorSecondaryContainer">@color/ink_tint</item>
+        <item name="colorOnSecondaryContainer">@color/ink_text</item>
+        <item name="colorControlActivated">@color/ink_text</item>
+        <item name="colorSurface">@color/ink_panel</item>
+        <item name="colorSurfaceVariant">@color/ink_tint</item>
+        <item name="colorOnSurface">@color/ink_text</item>
+        <item name="colorOnSurfaceVariant">@color/ink_secondary</item>
+        <item name="colorOutline">@color/ink_line</item>
+        <item name="colorError">@color/ink_error</item>
+        <item name="android:colorBackground">@color/ink_background</item>
+        <item name="android:fontFamily">sans</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
+    </style>
+</resources>

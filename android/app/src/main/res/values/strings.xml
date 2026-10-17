@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">记一笔 · 预览</string>
+    <string name="ledger">明细</string>
+    <string name="statistics">统计</string>
+    <string name="capture">自动</string>
+    <string name="settings">设置</string>
+    <string name="dismiss_notice">关闭提示</string>
+    <string name="previous_month">上个月</string>
+    <string name="next_month">下个月</string>
+    <string name="add_entry">记一笔</string>
+</resources>

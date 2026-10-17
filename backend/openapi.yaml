@@ -1,0 +1,188 @@
+openapi: 3.0.3
+info:
+  title: Ink Ledger Optional Recognition Contract
+  version: 0.1.0-draft
+  description: >-
+    Proposed optional cloud text-recognition boundary only. No service is deployed,
+    and the Android demo does not call this API. This is not a WeChat/Alipay personal
+    transaction API. A response is a review candidate, never a confirmed ledger write.
+tags:
+  - name: Optional recognition
+paths:
+  /v1/recognitions:
+    post:
+      tags: [Optional recognition]
+      operationId: recognizeProvidedReceiptText
+      summary: Propose fields from text the user explicitly chooses to send
+      description: >-
+        Future implementation must enforce per-user authorization, explicit opt-in,
+        request size limits, cancellation/timeouts, and user-scoped idempotency.
+        A repeated Idempotency-Key with a different request body must return 409.
+        This contract has no endpoint for reading payment accounts or writing a ledger.
+      security:
+        - accountBearer: []
+      parameters:
+        - name: Idempotency-Key
+          in: header
+          required: true
+          description: Stable opaque key per user operation; not a payment credential.
+          schema:
+            type: string
+            minLength: 16
+            maxLength: 128
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecognitionRequest'
+      responses:
+        '200':
+          description: Candidate requiring local user confirmation, or unrecognized input
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecognitionResponse'
+        '400':
+          $ref: '#/components/responses/InvalidRequest'
+        '401':
+          description: Missing or invalid account credential
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Explicit opt-in missing or recognition not enabled for this account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '409':
+          description: Idempotency key reused for a different request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '429':
+          description: Rate limit reached; no ledger entry was created
+          headers:
+            Retry-After:
+              schema:
+                type: integer
+                minimum: 1
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '503':
+          description: Recognition unavailable; local manual entry remains usable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+components:
+  securitySchemes:
+    accountBearer:
+      type: http
+      scheme: bearer
+      description: Future service account credential, never a WeChat/Alipay login or payment token.
+  responses:
+    InvalidRequest:
+      description: Unsupported or invalid input
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    RecognitionRequest:
+      type: object
+      additionalProperties: false
+      required: [consentToCloudProcessing, text, channel, currency]
+      properties:
+        consentToCloudProcessing:
+          type: boolean
+          enum: [true]
+          description: Must follow a visible, affirmative action for this upload; not a preset checkbox.
+        text:
+          type: string
+          minLength: 1
+          maxLength: 16000
+          description: User-previewed, minimized receipt text. Image upload is not part of this draft.
+        channel:
+          type: string
+          enum: [WECHAT, ALIPAY, MANUAL]
+        currency:
+          type: string
+          enum: [CNY]
+        capturedAt:
+          type: string
+          format: date-time
+          description: Capture time is context only, not a substitute for an unknown transaction time.
+    RecognitionResponse:
+      type: object
+      additionalProperties: false
+      required: [requestId, status, confirmationRequired, missingFields]
+      properties:
+        requestId:
+          type: string
+        status:
+          type: string
+          enum: [NEEDS_REVIEW, UNRECOGNIZED]
+        confirmationRequired:
+          type: boolean
+          enum: [true]
+        candidate:
+          $ref: '#/components/schemas/RecognitionCandidate'
+        missingFields:
+          type: array
+          uniqueItems: true
+          items:
+            type: string
+            enum: [merchant, amountMinor, category, occurredAt, kind]
+    RecognitionCandidate:
+      type: object
+      additionalProperties: false
+      properties:
+        merchant:
+          type: string
+          nullable: true
+          maxLength: 256
+        amountMinor:
+          type: string
+          nullable: true
+          pattern: '^[1-9][0-9]{0,10}$'
+          description: >-
+            Positive CNY fen encoded as a base-10 string to avoid JavaScript JSON
+            precision loss. Product limit is 99999999999 fen (999999999.99 yuan),
+            matching the Android Money.MAX_AMOUNT_MINOR validation. Reject rather
+            than round or clamp values outside 1..99999999999.
+          example: '1230'
+        currency:
+          type: string
+          enum: [CNY]
+        category:
+          type: string
+          nullable: true
+          maxLength: 64
+        occurredAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: Null when not confidently present in the source; never silently replace with now.
+        kind:
+          type: string
+          nullable: true
+          enum: [EXPENSE, INCOME, TRANSFER, REFUND, null]
+    Error:
+      type: object
+      additionalProperties: false
+      required: [code, message, retryable]
+      properties:
+        code:
+          type: string
+          enum: [INVALID_INPUT, UNAUTHORIZED, OPT_IN_REQUIRED, IDEMPOTENCY_CONFLICT, RATE_LIMITED, UNAVAILABLE]
+        message:
+          type: string
+          description: Safe user-readable message without raw receipt or upstream-provider secrets.
+        retryable:
+          type: boolean

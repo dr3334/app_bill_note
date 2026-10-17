@@ -1,0 +1,26 @@
+{
+  "version": "2026-10-17",
+  "purpose": "记一笔墨色清单交互预演；原生参数待荣耀真机校准",
+  "visual": {
+    "light": {"background":"#fafaf8","panel":"#ffffff","text":"#222329","secondary":"#5e606a","line":"#dededc"},
+    "dark": {"background":"#191a1d","panel":"#222429","text":"#f1f1f1","secondary":"#bcbec8","line":"#45464e"},
+    "spacingDp":[4,8,12,16,24,32],
+    "minimumTouchDp":48,
+    "dockDestinations":["明细","统计","自动","设置"]
+  },
+  "webPreview": {
+    "pressMs":100,"dockMs":220,"pageMs":200,"sheetEnterMs":300,"sheetExitMs":180,
+    "noticeMs":260,"newEntryMs":220,"amountMs":160,"capsuleConceptEnterMs":320,
+    "easing":"cubic-bezier(.2,0,0,1)",
+    "maxPageTranslationPx":8,"maxEntryTranslationPx":10
+  },
+  "native": {
+    "preferredExistingViewComponent":"androidx.dynamicanimation.animation.SpringAnimation",
+    "scheme":"标准低回弹；当前值和速度可接续",
+    "stiffness":null,"dampingRatio":null,
+    "requiresDeviceCalibration":true,
+    "systemCapsuleMotionControlledBy":"荣耀系统"
+  },
+  "reducedMotion": {"translation":false,"scaling":false,"dockSlide":false,"decorativeLoops":false,"keepStatusText":true},
+  "invariants":["业务提交不依赖动画结束","重复输入不重复记账","待核对不进入正式统计","系统展示失败不重放入账","锁屏默认不显示商家金额"]
+}

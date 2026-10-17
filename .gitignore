@@ -1,0 +1,12 @@
+.archify/
+**/.gradle/
+**/.idea/
+**/.kotlin/
+**/build/
+android/local.properties
+build-support/*.log
+build-support/*.xml
+artifacts/*.apk
+artifacts/screenshots/
+design/.qa/
+*.iml

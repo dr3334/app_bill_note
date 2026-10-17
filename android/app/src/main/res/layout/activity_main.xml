@@ -1,0 +1,17 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root" android:layout_width="match_parent" android:layout_height="match_parent"
+    android:background="@color/ink_background">
+    <FrameLayout android:id="@+id/page_container" android:layout_width="match_parent" android:layout_height="match_parent" />
+    <dev.inkledger.app.ui.InkDock android:id="@+id/dock" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal" android:layout_marginHorizontal="20dp" android:layout_marginBottom="12dp" />
+    <LinearLayout android:id="@+id/notice" android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:layout_marginHorizontal="24dp" android:layout_marginTop="8dp" android:orientation="horizontal"
+        android:gravity="center_vertical" android:paddingStart="20dp" android:paddingEnd="4dp"
+        android:paddingVertical="8dp" android:elevation="12dp" android:visibility="gone" android:accessibilityLiveRegion="polite">
+        <TextView android:id="@+id/notice_text" android:layout_width="0dp" android:layout_height="wrap_content"
+            android:layout_weight="1" android:textSize="14sp" android:textColor="@color/ink_text" />
+        <ImageButton android:id="@+id/notice_close" android:layout_width="48dp" android:layout_height="48dp"
+            android:contentDescription="@string/dismiss_notice" android:src="@drawable/ic_close"
+            android:background="?attr/selectableItemBackgroundBorderless" android:padding="14dp" />
+    </LinearLayout>
+</FrameLayout>
