@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">记一笔 · 预览</string>
+    <string name="app_name">记一笔 · 付款识别</string>
     <string name="ledger">明细</string>
     <string name="statistics">统计</string>
     <string name="capture">自动</string>

@@ -1,56 +1,50 @@
-# 记一笔 · Android 界面预览
+# 记一笔 Android 工程
 
-已确认的「墨色清单＋底部 Dock」原生实现。当前应用 ID 为 `dev.inkledger.app.demo`，应用名称为「记一笔 · 预览」。这是可独立运行的本地示例账本，不连接微信、支付宝或云端。
+当前版本 **0.4.0-alipay-samples**，应用名「记一笔 · 付款识别」，包名 `dev.inkledger.app.alipaytest`。使用本地真实账本，不再是 0.1 的演示 App。
 
-## 本次实现
+**安装、授权与触发步骤见[项目首页使用说明](../README.md)**。详细操作：[支付宝实图自测](../docs/ALIPAY-REAL-SAMPLES.md) · [微信使用说明](../docs/WECHAT-QUICKSTART.md)。源码仓库不包含 APK，需自行构建或使用已单独交付的测试包。
 
-- 明细、统计、自动、设置四个原生页面，列表复用 RecyclerView，面板复用 Material BottomSheet。
-- Dock 指示块使用 AndroidX SpringAnimation；页面过渡与账目入列使用原生动画。遵守系统移除动画及应用内减少动态设置。
-- 账目新增、编辑、待核对确认、删除、月预算、按月统计，浅深色与隐藏金额。
-- 独立 Room 数据库持久化示例数据；金额为 CNY 整数分；未确认记录不计入收支；重复来源凭据不重复插入；批量导入有事务。
-- 明确隔离的演示事件：付款成功、金额待核对、识别失败、来源失效、导入预览和取消。触发示例不会读取真实通知、图片或支付信息。
+## 当前能力
 
-## 工程分层
+- 明细、统计、自动、设置四个原生 View 页面，Room 本地存储；手动记账、编辑、删除、待核对确认、月预算、主题及减少动态。
+- 微信／支付宝来源分别选择和同意，页面读取、通知读取、本地截图 OCR 分别授权；仅针对所选支付应用，不读取账户流水接口。
+- 页面事件触发识别；信息完整、身份可靠的近期人民币付款可确认。缺商户／时间、历史账单、疑似重复等待核对；没有金额不生成零元记录。
+- Android 14+ 支持单窗口 OCR。已读到成功凭证但缺金额时尝试自动 OCR；完全无可读文字时，使用“自动 → 识别当前付款页”的 8 秒单次触发。OCR 及微信通知候选始终待核对。
+- 支付宝付款页只取主金额，过滤原价、优惠、积分与广告；转账返回 `TRANSFER_NOT_EXPENSE` 并跳过记账；账单详情负号表示支出，保留账单时间，不把“收钱码收款”误判为收入。
+- 首次四步指南可跳过、返回；“自动／设置 → 使用指南”可重看。三张脱敏实图可切换类型与放大滚动，阅读示例不触发授权或记账。
 
-| 目录 | 职责 |
+微信聊天、红包、转账、收款、退款不自动记为消费。没有云同步或荣耀系统胶囊；截图仅在内存处理，不上传、不写相册。相同凭据去重不等于能自动证明跨来源、无共同交易号的记录是同一笔，核对时仍需避免重复确认。
+
+## 构建与检查
+
+JDK 17、SDK Platform 35／Build Tools 35.0.0；Gradle Wrapper 8.11.1、AGP 8.9.3、Kotlin 2.1.21。先配置本机 SDK 与 `JAVA_HOME`，在本目录执行：
+
+```powershell
+.\gradlew.bat :app:assembleDebug
+.\gradlew.bat :app:testDebugUnitTest :ledger-core:testDebugUnitTest :app:lintDebug
+```
+
+macOS／Linux 使用 `./gradlew`。默认包在 `app/build/outputs/apk/debug/app-debug.apk`。Windows 中文路径遇到 worker 参数文件编码问题时可加 `-PinkBuildRoot=C:/ink-ledger-build`，将输出改到英文路径；完整步骤见[首页](../README.md#从源码构建)。
+
+只编译设备测试源码、不运行设备：
+
+```powershell
+.\gradlew.bat :app:compileDebugAndroidTestKotlin :ledger-core:compileDebugAndroidTestKotlin
+```
+
+0.4 交付时 73 项 JVM 测试通过、lint 0 errors／25 warnings、APK 和设备测试源码编译成功。发布前替换测试日期为虚构值后，15 项转录测试再次通过。本轮未启动模拟器、未安装或执行设备测试；人工转录不等于实际图片 OCR 验证。真实页面结构、授权、后台与界面效果由用户在手机上检查。
+
+## 模块
+
+| 模块 | 职责 |
 | --- | --- |
-| `app` | Activity、ViewBinding、四个 Fragment、ViewModel、Dock、通用列表、编辑面板及应用内提示 |
-| `ledger-core` | Repository、Room 数据库、精确金额和统计、采集与识别端口、默认不可用实现及测试 |
-| `../backend` | 可选云识别 OpenAPI 合同；没有运行中的后端，也不是个人支付流水 API |
-| `../architecture` | 实际源码边界与可交互架构图说明 |
-| `../design` | 已确认的视觉、动效和荣耀能力研究 |
+| `app` | Activity、ViewBinding、Fragment、BottomSheet、权限与来源状态、通知／无障碍／本地 OCR 适配器 |
+| `ledger-core` | 金额、统计、Room 数据、微信／支付宝解析、持久幂等和测试；见[核心 API](ledger-core/README.md) |
+| `capture-fixture` | 历史合成采集测试辅助模块，不能安装到个人手机，不随 App 分发 |
+| `../backend` | 可选云识别接口草案，当前没有运行后端 |
 
-App 直接调用 Kotlin Repository，没有启动上游本地 HTTP 服务。`CaptureCoordinator` 已定义组合流程，但未装配到真实来源；默认端口明确返回不可用。未来替换采集/OCR/解析实现，不需要重写四个页面。
+App 直接使用 Kotlin Repository，不启动上游本地 HTTP 服务。`RoomLedgerRepository.createLive()` 使用 `ink-ledger-live.db`；内部 `Alipay*` 名称保留兼容，微信和支付宝采用隔离的来源身份空间。现有测试版同签名覆盖安装保留账目与设置；本工程不提供 AutoAccounting 旧数据库迁移。
 
-## 本机构建
+## 来源
 
-JDK 17、Android SDK/Build Tools 35、Gradle 8.11.1、AGP 8.9.3、Kotlin 2.1.21、KSP 2.1.21-2.0.1、Room 2.7.2。精确工具路径见 [工具链说明](../build-support/TOOLCHAIN.md)。
-
-在 `D:\记账软件` 用 PowerShell：
-
-```powershell
-.\build-support\Invoke-Gradle.ps1 -GradleArgs @(':app:assembleDebug', ':ledger-core:testDebugUnitTest', ':app:lintDebug', '--no-daemon')
-```
-
-本机脚本设置进程级环境，不更改全局 Java/SDK 配置。为避开 Windows Gradle 测试进程对中文参数文件路径的兼容问题，脚本将构建输出放到 `D:\app\ink-ledger-build`；源码仍在本目录。其他机器可直接使用 `gradlew`，也可传入 `-PinkBuildRoot=<本机 ASCII 输出目录>`。
-
-```powershell
-# 明确指定自己的目标设备，避免安装到电脑上其他已连接手机
-adb -s <设备序列号> install -r <app-debug.apk 的实际路径>
-```
-
-调试 APK 使用开发签名，当前并非应用商店发行包。不要把此工程安装后出现的示例交易当作实际采集结果。
-
-## AutoAccounting 复用
-
-固定上游提交 `34b38f82ca9ad6d7905c715c66891977f8809c88`。复用原账单类型/状态、改造后的账本字段与统计 SQL、矢量资源和 Gradle Wrapper；完整来源、修改与许可记录见 [第三方说明](THIRD-PARTY-NOTICES.md) 及 [核心复用记录](ledger-core/UPSTREAM.md)。原项目的旧页面耦合本地 HTTP、设置与采集链路，所以本次重做视觉表层，继续使用原生 View 技术路线。
-
-未引入完整旧 App、Hook、私有规则包、OCR 模型或作者遥测。保留上游原版权与许可文件，未将存在冲突的文件头改称宽松许可。当前是独立新数据库，不提供上游旧数据库直接迁移。
-
-## 荣耀适配边界
-
-目标为荣耀 100 Pro / MagicOS 10。当前按 `WindowInsets` 处理系统栏、开孔与横屏边缘，字号随系统缩放，Dock 与内容留足底部空间，不按物理分辨率硬编码。
-
-系统胶囊暂未接入，所有提示在 App 内显示。模拟器验证不能替代荣耀真机验证。通知采集/OCR、后台存活、120Hz 帧耗时、触感和功耗、真实微信/支付宝付款、应用商店审核均不在本次完成范围。
-
-交互和测试结果见 [原生实现验收](../artifacts/VERIFICATION.md)。
+固定 AutoAccounting 上游提交 `34b38f82ca9ad6d7905c715c66891977f8809c88`。复用和修改见[第三方通知](THIRD-PARTY-NOTICES.md)、[核心来源记录](ledger-core/UPSTREAM.md)。未引入完整旧 App、Hook、远程私有规则包或作者遥测。保留原版权、GPL v3 文本及文件头冲突说明。

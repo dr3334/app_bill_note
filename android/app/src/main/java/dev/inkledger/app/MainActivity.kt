@@ -98,5 +98,18 @@ class MainActivity : AppCompatActivity() {
         target.view?.let { if (animate) InkMotion.enter(it, model.state.value.reducedMotion) }
     }
 
+    override fun onResume() {
+        super.onResume()
+        model.refreshCapture()
+    }
+
+    override fun onPostResume() {
+        super.onPostResume()
+        if (UsageGuideSheet.needsFirstRun(this) && !supportFragmentManager.isStateSaved &&
+            supportFragmentManager.fragments.none { it is InkSheet && it.isAdded }) {
+            UsageGuideSheet.firstRun().show(supportFragmentManager, "usage-guide")
+        }
+    }
+
     override fun onSaveInstanceState(outState: Bundle) { outState.putInt("tab", selected); super.onSaveInstanceState(outState) }
 }

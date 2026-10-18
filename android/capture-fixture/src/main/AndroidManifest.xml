@@ -1,0 +1,6 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <application android:label="采集测试夹具·非支付宝" android:allowBackup="false" android:theme="@android:style/Theme.Material.Light.NoActionBar">
+        <activity android:name="dev.inkledger.fixture.ReceiptFixtureActivity" android:exported="true" android:launchMode="singleTop" />
+    </application>
+</manifest>

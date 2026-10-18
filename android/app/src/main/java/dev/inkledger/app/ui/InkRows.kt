@@ -131,13 +131,24 @@ class InkRows(private val onAction: (String) -> Unit) : ListAdapter<InkRow, InkR
                 val line = c.column()
                 line.setPadding(c.dp(16), c.dp(12), c.dp(16), c.dp(12))
                 line.background = c.shape(c.color(R.color.ink_tint), 16)
-                val titleLine = c.row()
-                titleLine.addView(text(item.title, 16f, bold = true), LinearLayout.LayoutParams(0, -2, 1f))
-                if (item.value.isNotEmpty()) titleLine.addView(text(item.value, 12f, true))
+                val stacked = c.resources.configuration.fontScale > 1.3f
+                val titleLine = if (stacked) c.column() else c.row()
+                titleLine.addView(text(item.title, 16f, bold = true), if (stacked) LinearLayout.LayoutParams(-1, -2) else LinearLayout.LayoutParams(0, -2, 1f))
+                if (item.value.isNotEmpty()) {
+                    if (stacked) titleLine.addGap(8)
+                    titleLine.addView(text(item.value, 12f, true))
+                }
                 line.addView(titleLine)
                 if (item.subtitle.isNotEmpty()) { line.addGap(8); line.addView(text(item.subtitle, 13f, true)) }
                 line.minimumHeight = c.dp(64)
                 line.isFocusable = true; line.isClickable = true; line.isEnabled = item.enabled
+                ViewCompat.setScreenReaderFocusable(line, true)
+                ViewCompat.setAccessibilityDelegate(line, object : androidx.core.view.AccessibilityDelegateCompat() {
+                    override fun onInitializeAccessibilityNodeInfo(host: View, info: androidx.core.view.accessibility.AccessibilityNodeInfoCompat) {
+                        super.onInitializeAccessibilityNodeInfo(host, info)
+                        info.className = "android.widget.Button"
+                    }
+                })
                 line.foreground = android.graphics.drawable.RippleDrawable(android.content.res.ColorStateList.valueOf(c.color(R.color.ink_line)), null, c.shape(android.graphics.Color.WHITE))
                 line.setOnClickListener { if (item.enabled) onAction(item.action) }
                 line.alpha = if (item.enabled) 1f else .5f

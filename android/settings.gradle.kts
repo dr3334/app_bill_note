@@ -7,3 +7,5 @@ dependencyResolutionManagement {
 }
 rootProject.name = "InkLedger"
 include(":app", ":ledger-core")
+// Emulator-only synthetic receipt producer. Never distribute or install on a personal phone.
+include(":capture-fixture")

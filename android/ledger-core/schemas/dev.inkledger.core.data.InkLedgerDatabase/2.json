@@ -1,0 +1,332 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 2,
+    "identityHash": "0607a0ea061606f2a40316752ad90c48",
+    "entities": [
+      {
+        "tableName": "ledger_entries",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `merchant` TEXT NOT NULL, `amountMinor` INTEGER NOT NULL, `category` TEXT NOT NULL, `channel` TEXT NOT NULL, `occurredAt` INTEGER NOT NULL, `state` TEXT NOT NULL, `evidenceId` TEXT, `type` TEXT NOT NULL, `accountLabel` TEXT, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "merchant",
+            "columnName": "merchant",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "amountMinor",
+            "columnName": "amountMinor",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "category",
+            "columnName": "category",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "channel",
+            "columnName": "channel",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "occurredAt",
+            "columnName": "occurredAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "state",
+            "columnName": "state",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "evidenceId",
+            "columnName": "evidenceId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "accountLabel",
+            "columnName": "accountLabel",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_ledger_entries_evidenceId",
+            "unique": true,
+            "columnNames": [
+              "evidenceId"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_ledger_entries_evidenceId` ON `${TABLE_NAME}` (`evidenceId`)"
+          },
+          {
+            "name": "index_ledger_entries_occurredAt",
+            "unique": false,
+            "columnNames": [
+              "occurredAt"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_ledger_entries_occurredAt` ON `${TABLE_NAME}` (`occurredAt`)"
+          }
+        ]
+      },
+      {
+        "tableName": "ledger_metadata",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`key` TEXT NOT NULL, `value` TEXT NOT NULL, PRIMARY KEY(`key`))",
+        "fields": [
+          {
+            "fieldPath": "key",
+            "columnName": "key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "value",
+            "columnName": "value",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "key"
+          ]
+        }
+      },
+      {
+        "tableName": "alipay_receipts",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` TEXT NOT NULL, `transactionKey` TEXT, `entryId` TEXT, `amountMinor` INTEGER, `merchantKey` TEXT, `transactionTime` INTEGER, `firstObservedAt` INTEGER NOT NULL, `lastObservedAt` INTEGER NOT NULL, `firstSource` TEXT NOT NULL, `deleted` INTEGER NOT NULL, `userEdited` INTEGER NOT NULL, `diagnosticCodes` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "transactionKey",
+            "columnName": "transactionKey",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "entryId",
+            "columnName": "entryId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "amountMinor",
+            "columnName": "amountMinor",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "merchantKey",
+            "columnName": "merchantKey",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "transactionTime",
+            "columnName": "transactionTime",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "firstObservedAt",
+            "columnName": "firstObservedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastObservedAt",
+            "columnName": "lastObservedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "firstSource",
+            "columnName": "firstSource",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "deleted",
+            "columnName": "deleted",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "userEdited",
+            "columnName": "userEdited",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "diagnosticCodes",
+            "columnName": "diagnosticCodes",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_alipay_receipts_transactionKey",
+            "unique": true,
+            "columnNames": [
+              "transactionKey"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_alipay_receipts_transactionKey` ON `${TABLE_NAME}` (`transactionKey`)"
+          },
+          {
+            "name": "index_alipay_receipts_entryId",
+            "unique": true,
+            "columnNames": [
+              "entryId"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_alipay_receipts_entryId` ON `${TABLE_NAME}` (`entryId`)"
+          },
+          {
+            "name": "index_alipay_receipts_lastObservedAt",
+            "unique": false,
+            "columnNames": [
+              "lastObservedAt"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_alipay_receipts_lastObservedAt` ON `${TABLE_NAME}` (`lastObservedAt`)"
+          }
+        ]
+      },
+      {
+        "tableName": "alipay_evidence",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`eventKey` TEXT NOT NULL, `captureKey` TEXT NOT NULL, `sessionKey` TEXT, `payloadHash` TEXT NOT NULL, `source` TEXT NOT NULL, `observedAt` INTEGER NOT NULL, `receiptId` TEXT NOT NULL, `diagnosticCodes` TEXT NOT NULL, PRIMARY KEY(`eventKey`))",
+        "fields": [
+          {
+            "fieldPath": "eventKey",
+            "columnName": "eventKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "captureKey",
+            "columnName": "captureKey",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sessionKey",
+            "columnName": "sessionKey",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "payloadHash",
+            "columnName": "payloadHash",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "observedAt",
+            "columnName": "observedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "receiptId",
+            "columnName": "receiptId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "diagnosticCodes",
+            "columnName": "diagnosticCodes",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "eventKey"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_alipay_evidence_captureKey",
+            "unique": false,
+            "columnNames": [
+              "captureKey"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_alipay_evidence_captureKey` ON `${TABLE_NAME}` (`captureKey`)"
+          },
+          {
+            "name": "index_alipay_evidence_sessionKey",
+            "unique": false,
+            "columnNames": [
+              "sessionKey"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_alipay_evidence_sessionKey` ON `${TABLE_NAME}` (`sessionKey`)"
+          },
+          {
+            "name": "index_alipay_evidence_payloadHash",
+            "unique": false,
+            "columnNames": [
+              "payloadHash"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_alipay_evidence_payloadHash` ON `${TABLE_NAME}` (`payloadHash`)"
+          },
+          {
+            "name": "index_alipay_evidence_receiptId",
+            "unique": false,
+            "columnNames": [
+              "receiptId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_alipay_evidence_receiptId` ON `${TABLE_NAME}` (`receiptId`)"
+          }
+        ]
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '0607a0ea061606f2a40316752ad90c48')"
+    ]
+  }
+}

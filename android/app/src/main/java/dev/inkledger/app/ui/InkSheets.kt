@@ -133,7 +133,7 @@ class EntrySheet : InkSheet() {
         }
         if (entryId != null && original == null) { note("这笔账目已不存在。"); button("关闭") { dismiss() }; return }
         val entry = original
-        note(if (entry?.state == EntryState.PENDING) "金额需要你核对。确认后才会计入统计。" else "改动仅保存在这个示例账本。")
+        note(if (entry?.state == EntryState.PENDING) "请核对金额与交易是否重复。确认后才会计入统计。" else "改动仅保存在手机本地账本。")
         val merchantField = field("商家或收支说明", saved?.getString("merchant") ?: entry?.merchant.orEmpty())
         merchant = merchantField.second
         val amountField = field("金额 · 人民币", saved?.getString("amount") ?: entry?.amountMinor?.let { java.math.BigDecimal.valueOf(it, 2).toPlainString() }.orEmpty(),
@@ -182,7 +182,7 @@ class EntrySheet : InkSheet() {
                 } finally { save.isEnabled = true }
             }
         }
-        if (entry != null) button("删除这笔示例账目", secondary = true) {
+        if (entry != null) button("删除这笔账目", secondary = true) {
             MaterialAlertDialogBuilder(requireContext()).setTitle("删除这笔账目？").setMessage("删除后会重新计算本月统计。")
                 .setNegativeButton("保留", null).setPositiveButton("删除") { _, _ -> model.delete(entry); dismiss() }.show()
         }
@@ -240,32 +240,15 @@ class InfoSheet : InkSheet() {
                     else { model.budget(value); dismiss() }
                 }
             }
-            "import" -> {
-                val existingCount = (0..3).count { index -> model.state.value.entries.any { it.evidenceId == "demo-batch-$index" } }
-                note("共 4 笔示例凭据，${4 - existingCount} 笔新账、$existingCount 笔已记录。确认后统一写入，已有账目不会被覆盖。")
-                model.batchEntries().forEach { entry ->
-                    content.addView(requireContext().label("${entry.merchant}   ¥${money(entry.amountMinor, model.state.value.hideAmounts)}", 16f)); content.addGap(16)
-                }
-                button("确认导入") { model.confirmImport(); dismiss() }
-                button("取消导入", secondary = true) { model.cancelImport(); dismiss() }
-            }
-            "source" -> {
-                val channel = requireArguments().getString("channel")
-                note("$channel 的付款采集尚未接通，本版不会读取其他应用。")
-                note("已预留来源采集、本地识别、交易解析、去重和入账接口。下一步在荣耀 100 Pro 上逐项验证授权与数据可获得性。")
-                note("当前使用应用内提示。荣耀系统胶囊待场景审核通过后再接入。")
-                button("体验入账提示") { model.scenario("success"); dismiss() }
-            }
             "about" -> {
-                note("记一笔 · 0.1.0 预览\n墨色清单＋底部 Dock")
+                note("记一笔 · ${dev.inkledger.app.BuildConfig.VERSION_NAME}\n墨色清单＋底部 Dock")
                 note("适配目标：荣耀 100 Pro / MagicOS 10。当前按系统窗口安全区布局，尚未通过荣耀真机验证。")
                 note("选择性复用 AutoAccounting 的账单类型、状态和统计查询，并改为整数金额、待核对隔离与凭据去重。源码按 GPL-3.0 方案保留通知。")
-                note("本版只使用本机示例账本，未申请联网、通知读取、无障碍或悬浮窗权限。")
+                note("本版可在授权后识别所选微信、支付宝的消费付款凭证；截图 OCR 需单独开启。微信通知与 OCR 候选需核对后确认。仅本地处理，不点击或代替你支付。银行卡与系统胶囊尚未接入。")
                 button("查看开源许可") { explain("开源许可", requireContext().assets.open("LICENSE").bufferedReader().use { it.readText() }).show(parentFragmentManager, "license") }
             }
             else -> {
                 note(requireArguments().getString("body").orEmpty())
-                if (requireArguments().getBoolean("demo")) button("体验待核对流程") { model.scenario("review"); dismiss() }
             }
         }
     }
@@ -274,9 +257,7 @@ class InfoSheet : InkSheet() {
         fun pending() = make("pending", "待核对")
         fun theme() = make("theme", "显示外观")
         fun budget() = make("budget", "月预算")
-        fun importPreview() = make("import", "导入前看一眼")
         fun about() = make("about", "关于记一笔")
-        fun source(channel: String) = make("source", "$channel 来源").apply { requireArguments().putString("channel", channel) }
         fun explain(title: String, body: String, demo: Boolean = false) = make("explain", title).apply {
             requireArguments().putString("body", body); requireArguments().putBoolean("demo", demo)
         }

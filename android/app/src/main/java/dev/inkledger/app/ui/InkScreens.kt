@@ -60,18 +60,18 @@ abstract class InkScreenFragment : Fragment() {
     }
     fun setBottomClearance(px: Int) { recycler?.setPadding(0, 0, 0, px) }
     override fun onDestroyView() { recycler?.adapter = null; recycler = null; rows = null; super.onDestroyView() }
-    protected fun header(title: String, add: Boolean = false) = InkRow("header", RowKind.HEADER, title, "示例账本 · 仅用于界面体验", action = if (add) "add" else "")
+    protected fun header(title: String, add: Boolean = false) = InkRow("header", RowKind.HEADER, title, "微信 / 支付宝 · 账本仅存本机", action = if (add) "add" else "")
     protected fun month(s: LedgerUiState) = InkRow("month", RowKind.MONTH, "${s.month.year} 年 ${s.month.monthValue} 月")
     protected fun entryRow(e: LedgerEntry, s: LedgerUiState) = InkRow("entry-${e.id}", RowKind.ENTRY, e.merchant,
         "${e.category} · ${e.channel.label} · ${Instant.ofEpochMilli(e.occurredAt).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("HH:mm"))}",
         (if (e.kind == EntryKind.INCOME || e.kind == EntryKind.REFUND) "+" else if (e.kind == EntryKind.TRANSFER) "" else "−") + money(e.amountMinor, s.hideAmounts), "entry:${e.id}")
     protected fun loading(s: LedgerUiState): List<InkRow>? = when {
-        s.loading -> listOf(InkRow("loading", RowKind.TEXT, "正在打开示例账本…"))
+        s.loading -> listOf(InkRow("loading", RowKind.TEXT, "正在打开本地账本…"))
         s.error != null -> listOf(InkRow("error", RowKind.ACTION, s.error, "点按重新读取", action = "retry"))
         else -> null
     }
 
-    private fun action(action: String) {
+    protected open fun action(action: String) {
         if (parentFragmentManager.isStateSaved) return
         if (parentFragmentManager.fragments.any { it is InkSheet && it.isAdded }) return
         when {
@@ -86,13 +86,9 @@ abstract class InkScreenFragment : Fragment() {
             action == "reduced" -> model.reduceMotion(!model.state.value.reducedMotion)
             action == "theme" -> InfoSheet.theme().show(parentFragmentManager, "theme")
             action == "budget" -> InfoSheet.budget().show(parentFragmentManager, "budget")
-            action == "import" -> model.startImport()
-            action == "cancel-import" -> model.cancelImport()
-            action == "review-import" -> InfoSheet.importPreview().show(parentFragmentManager, "import")
-            action.startsWith("demo:") -> model.scenario(action.substringAfter(':'))
             action == "about" -> InfoSheet.about().show(parentFragmentManager, "about")
-            action == "source:微信" || action == "source:支付宝" -> InfoSheet.source(action.substringAfter(':')).show(parentFragmentManager, "source")
-            action == "screenshot" -> InfoSheet.explain("截图补记", "页面已为系统图片选择器和本地识别留好入口。当前安装包仅提供交互演示，还不能读取或识别你的付款截图。", true).show(parentFragmentManager, "screenshot")
+            action == "guide" -> UsageGuideSheet().show(parentFragmentManager, "usage-guide")
+
         }
     }
 }
@@ -109,7 +105,7 @@ class LedgerFragment : InkScreenFragment() {
         if (pending > 0) add(InkRow("pending", RowKind.ACTION, "$pending 笔需要核对", "确认前不会计入收支", "查看", "pending"))
         val monthEntries = state.entries.filter { it.state == EntryState.CONFIRMED && java.time.YearMonth.from(Instant.ofEpochMilli(it.occurredAt).atZone(ZoneId.systemDefault())) == state.month }
         if (monthEntries.isEmpty()) {
-            add(InkRow("empty", RowKind.TEXT, "这个月还没有账目", "可以手动记一笔，或去「自动」体验入账流程。"))
+            add(InkRow("empty", RowKind.TEXT, "这个月还没有账目", "先到「自动」选择微信或支付宝并授权，也可以手动记一笔。"))
             add(InkRow("empty-action", RowKind.BUTTON, "记第一笔", action = "add"))
         } else {
             monthEntries.sortedByDescending { it.occurredAt }.groupBy { Instant.ofEpochMilli(it.occurredAt).atZone(ZoneId.systemDefault()).toLocalDate() }.forEach { (day, entries) ->
@@ -140,26 +136,6 @@ class StatsFragment : InkScreenFragment() {
     }
 }
 
-class CaptureFragment : InkScreenFragment() {
-    override fun rows(state: LedgerUiState) = buildList {
-        add(header("让记账更轻松"))
-        add(InkRow("status", RowKind.TEXT, "付款采集尚未接通", "本版先体验界面和动效。下方演示只会改变示例账本。"))
-        add(InkRow("sources", RowKind.SECTION, "付款来源"))
-        listOf("微信", "支付宝").forEach { add(InkRow("source-$it", RowKind.ACTION, it, "查看接入安排", "未接通", "source:$it")) }
-        add(InkRow("capture", RowKind.SECTION, "补记与整理"))
-        add(InkRow("screenshot", RowKind.ACTION, "截图补记", "系统选图 · 本地识别", "规划中", "screenshot"))
-        when {
-            state.importProgress != null -> add(InkRow("import", RowKind.ACTION, "正在整理 ${state.importProgress} / 4", "演示处理，点按取消", "取消", "cancel-import"))
-            state.importReady -> add(InkRow("import", RowKind.ACTION, "4 笔示例账目待导入", "先检查，再写入账本", "查看", "review-import", enabled = !state.busy))
-            else -> add(InkRow("import", RowKind.ACTION, "体验账单导入", "整理进度、预览与重复处理", "演示", "import", enabled = !state.busy && !state.loading && state.error == null))
-        }
-        add(InkRow("demos", RowKind.SECTION, "试试自动入账", value = "示例事件"))
-        listOf("success" to "付款成功", "review" to "金额需要核对", "failure" to "识别失败", "permission" to "来源权限失效").forEach { (key, name) ->
-            add(InkRow("demo-$key", RowKind.ACTION, name, if (key == "success") "再点一次可验证重复提示" else "查看应用内反馈", action = "demo:$key", enabled = !state.busy && !state.loading && state.error == null))
-        }
-    }
-}
-
 class SettingsFragment : InkScreenFragment() {
     override fun rows(state: LedgerUiState) = listOf(
         header("按你的习惯"),
@@ -167,9 +143,10 @@ class SettingsFragment : InkScreenFragment() {
         InkRow("theme", RowKind.ACTION, "显示外观", "跟随系统，也可以独立选择", when (state.theme) { 1 -> "浅色"; 2 -> "深色"; else -> "系统" }, "theme"),
         InkRow("privacy", RowKind.TOGGLE, "隐藏金额", "明细、统计和应用内提示同步隐藏", action = "private", checked = state.hideAmounts),
         InkRow("motion", RowKind.TOGGLE, "减少动态", "关闭位移和 Dock 滑动，保留所有状态反馈", action = "reduced", checked = state.reducedMotion),
+        InkRow("guide", RowKind.ACTION, "使用指南", "触发方式、支付宝脱敏示例与核对说明", "回看", "guide"),
         InkRow("book", RowKind.SECTION, "账本"),
         InkRow("budget", RowKind.ACTION, "月预算", "¥${money(state.budgetMinor, state.hideAmounts)}", "调整", "budget"),
-        InkRow("scope", RowKind.TEXT, "当前为独立示例账本", "你的改动保存在本机。没有读取微信、支付宝或银行卡，也没有云端同步。"),
-        InkRow("about", RowKind.ACTION, "关于记一笔", "版本、复用来源和设备适配", "0.1", "about"),
+        InkRow("scope", RowKind.TEXT, "本地付款账本", "保留原支付宝测试账目，与旧预览版示例数据分开。读取默认关闭；微信需另行选择，截图需单独同意。"),
+        InkRow("about", RowKind.ACTION, "关于记一笔", "版本、复用来源和设备适配", "0.3", "about"),
     )
 }

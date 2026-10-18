@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="alipay_accessibility_label">记一笔 · 支付页面读取</string>
+    <string name="alipay_notification_label">记一笔 · 支付通知读取</string>
+    <string name="alipay_accessibility_description">仅在你阅读说明、同意并开启功能后，读取你选中的支付宝或微信当前可见支付页面；未选应用不处理，微信普通聊天不作为账单。不点击、不操作付款，跳过密码、验证码及输入控件。单独同意截图识别后，Android 14 及以上可对所选应用的单个窗口在内存中进行本地中文识别；截图不保存、不上传，系统拒绝时不绕过。本服务用于个人记账，并非为残障用户提供的辅助工具。可随时在记一笔关闭采集或在系统设置撤销授权。</string>
+</resources>

@@ -1,12 +1,35 @@
-.archify/
+# Local build / editor state
+/.archify/
 **/.gradle/
-**/.idea/
 **/.kotlin/
+**/.idea/
 **/build/
-android/local.properties
-build-support/*.log
-build-support/*.xml
-artifacts/*.apk
-artifacts/screenshots/
-design/.qa/
+**/local.properties
 *.iml
+*.log
+*.apk
+*.apk.sha256
+*.aab
+
+# Private source material and generated previews
+/design/payment-reference-assets/
+/design/.qa/
+/docs/research/
+/artifacts/screenshots/
+/build-support/*
+!/build-support/Invoke-Gradle.ps1
+!/build-support/TOOLCHAIN.md
+
+# Credentials, signing keys and personal ledger data
+.env
+.env.*
+*.jks
+*.keystore
+*.p12
+*.pem
+*.key
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3

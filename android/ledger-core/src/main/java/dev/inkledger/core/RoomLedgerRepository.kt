@@ -6,6 +6,10 @@ import androidx.room.withTransaction
 import dev.inkledger.core.data.InkLedgerDatabase
 import dev.inkledger.core.data.LedgerEntryEntity
 import dev.inkledger.core.data.LedgerMetadata
+import dev.inkledger.core.alipay.AlipayEvidence
+import dev.inkledger.core.alipay.AlipayIdentityStore
+import dev.inkledger.core.alipay.AlipayPaymentCandidate
+import dev.inkledger.core.alipay.AlipayProcessResult
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -45,7 +49,10 @@ class RoomLedgerRepository internal constructor(
                         SaveResult.Duplicate(sameEvidence.toEntry())
                     } else {
                         val row = LedgerEntryEntity.from(value)
-                        if (current == null) dao.insert(row) else dao.update(row)
+                        if (current == null) dao.insert(row) else {
+                            database.alipayCaptureDao().markUserEdited(value.id)
+                            dao.update(row)
+                        }
                         SaveResult.Saved(value)
                     }
                 }
@@ -61,22 +68,33 @@ class RoomLedgerRepository internal constructor(
     }
 
     override suspend fun delete(id: String) {
-        dao.delete(id)
+        database.withTransaction {
+            database.alipayCaptureDao().markDeleted(id)
+            dao.delete(id)
+        }
     }
 
     /** Keeps the seed marker. A cleared demo ledger stays empty on every restart. */
     suspend fun clearEntries() {
-        database.withTransaction { dao.clearEntries() }
+        database.withTransaction {
+            database.alipayCaptureDao().markAllDeleted()
+            dao.clearEntries()
+        }
     }
 
     override suspend fun seedDemoIfNeeded() {
-        check(isDemoDatabase) { "Demo seeding is disabled for this database" }
+        if (!isDemoDatabase) return
         database.withTransaction {
             if (dao.metadata(DEMO_SEED_KEY) != null) return@withTransaction
             // Also protect data saved before the first invocation: never mix in samples.
             if (dao.count() == 0) DemoEntries.create().forEach { dao.insert(LedgerEntryEntity.from(it)) }
             dao.insertMetadata(LedgerMetadata(DEMO_SEED_KEY, "1"))
         }
+    }
+
+    internal suspend fun storeAlipay(evidence: AlipayEvidence, candidate: AlipayPaymentCandidate): AlipayProcessResult {
+        if (isDemoDatabase) return AlipayProcessResult.Failed("真实采集不能写入示例账本，请切换真实测试账本")
+        return AlipayIdentityStore(database).accept(evidence, candidate)
     }
 
     /** SQL equivalent of LedgerStats, useful when the ledger outgrows list aggregation. */
@@ -93,15 +111,27 @@ class RoomLedgerRepository internal constructor(
 
     companion object {
         const val DATABASE_NAME: String = "ink-ledger-demo.db"
+        const val LIVE_DATABASE_NAME: String = "ink-ledger-live.db"
         internal const val DEMO_SEED_KEY = "demo-seed-v1"
         @Volatile private var instance: RoomLedgerRepository? = null
+        @Volatile private var liveInstance: RoomLedgerRepository? = null
 
         fun create(context: Context): RoomLedgerRepository = instance ?: synchronized(this) {
             instance ?: RoomLedgerRepository(
                 Room.databaseBuilder(context.applicationContext, InkLedgerDatabase::class.java, DATABASE_NAME)
+                    .addMigrations(InkLedgerDatabase.MIGRATION_1_2)
                     .build(),
                 isDemoDatabase = true,
             ).also { instance = it }
+        }
+
+        fun createLive(context: Context): RoomLedgerRepository = liveInstance ?: synchronized(this) {
+            liveInstance ?: RoomLedgerRepository(
+                Room.databaseBuilder(context.applicationContext, InkLedgerDatabase::class.java, LIVE_DATABASE_NAME)
+                    .addMigrations(InkLedgerDatabase.MIGRATION_1_2)
+                    .build(),
+                isDemoDatabase = false,
+            ).also { liveInstance = it }
         }
     }
 }
